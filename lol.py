@@ -8,6 +8,9 @@ import torch.utils.data
 import numpy as np
 import torch
 
+def train():
+    return
+
 def load_data(path=""):
     return
 
