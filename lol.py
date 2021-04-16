@@ -41,15 +41,9 @@ class AutoEncoder(nn.Module):
         """
         out = self.g(inputs)
         out = self.s(out)
-        out = self.g1(out)
         out = self.r(out)
-        out = self.g2(out)
         out = self.s(out)
         out = self.h(out)
-        out = self.r(out)
-        out = self.h1(out)
-        out = self.s(out)
-        out = self.h2(out)
 
         return out
 
