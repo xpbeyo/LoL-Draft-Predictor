@@ -8,6 +8,8 @@ import torch.utils.data
 import numpy as np
 import torch
 
+import matplotlib.pyplot as plt
+
 class AutoEncoder(nn.Module):
     def __init__(self):
         """ Initialize a class AutoEncoder.
@@ -48,11 +50,38 @@ class AutoEncoder(nn.Module):
         return out
 
 
-def train(model, num_epoch, lr, lamb):
+def train(model, num_epoch, lr, lamb, data):
     model.train()
 
+    # Define optimizers and loss function.
+    optimizer = optim.SGD(model.parameters(), lr=lr)
+
+    losses = []
+
     for epoch in range(0, num_epoch):
-    return
+        loss = 0.
+
+        for stage in range(0, 10):
+            inputs = Variable(data[stage]).unsqueeze(0)
+            target = inputs.clone()
+
+            optimizer.zero_grad()
+            output = model(inputs)
+
+            loss = torch.sum((output - target) ** 2.) + lamb / 2 * (
+                        model.get_weight_norm() ** 2)
+            loss.backward()
+
+            loss += loss.item()
+            optimizer.step()
+
+        losses.append(loss)
+        print("Epoch: {} \tTraining Cost: {:.6f}\t".format(epoch, loss))
+
+    plt.plot(range(1, num_epoch + 1), losses, label="Training Loss")
+    plt.title(f"Training Loss")
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
 
 def load_data(path=""):
     return
@@ -62,11 +91,13 @@ def main():
 
     model = AutoEncoder()
     # Optimization hyperparameters.
-    lr = None
-    num_epoch = None
+    lr = 0.005
+    num_epoch = 50
+
+    #Do we want a lambda for loss?
     lamb = None
 
-    train(model, num_epoch, lr, lamb)
+    train(model, num_epoch, lr, lamb, data)
 
 
 if __name__ == "__main__":
