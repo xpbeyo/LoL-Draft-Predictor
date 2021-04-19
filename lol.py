@@ -10,6 +10,16 @@ import torch
 
 import matplotlib.pyplot as plt
 
+
+def reward(state, a):
+    return
+
+
+def new_Q(state, a, lr, d):
+    #New Q(s, a) = Q(s, a) + lr [R(s,a) + d*maxQ'(s', a') - Q(s, a)]
+    return
+
+
 def sigmoid(x):
     """Uses sigmoid function on <x>"""
     return np.exp(x) / (1 + np.exp(x))
