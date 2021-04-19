@@ -10,6 +10,10 @@ import torch
 
 import matplotlib.pyplot as plt
 
+def sigmoid(x):
+    """Uses sigmoid function on <x>"""
+    return np.exp(x) / (1 + np.exp(x))
+
 class AutoEncoder(nn.Module):
     def __init__(self):
         """ Initialize a class AutoEncoder.
