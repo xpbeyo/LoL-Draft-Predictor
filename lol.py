@@ -76,13 +76,15 @@ def train(model, num_epoch, lr, discount, data):
         loss = 0.
 
         for stage in range(0, 10):
-            inputs = Variable(data[stage]).unsqueeze(0)
-            target = inputs.clone()
+            #TODO: Fix with data
+            inputs = #Variable(data[stage]).unsqueeze(0)
+            target = #inputs.clone()
 
             optimizer.zero_grad()
-            output = model(inputs)
+            inputs = model(inputs)
 
-            loss = torch.sum((output - target) ** 2.)
+            CELoss = nn.CrossEntropyLoss()
+            loss = CELoss(inputs, target)
             loss.backward()
 
             loss += loss.item()
@@ -106,6 +108,9 @@ def main():
     # Optimization hyperparameters.
     lr = 0.005
     num_epoch = 50
+
+    #data = np.loadtxt('team_comp.csv')
+
 
     #Do we want a lambda for loss?
     discount = None
