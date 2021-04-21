@@ -64,7 +64,7 @@ class AutoEncoder(nn.Module):
         return out
 
 
-def train(model, num_epoch, lr, lamb, data):
+def train(model, num_epoch, lr, discount, data):
     model.train()
 
     # Define optimizers and loss function.
@@ -82,8 +82,7 @@ def train(model, num_epoch, lr, lamb, data):
             optimizer.zero_grad()
             output = model(inputs)
 
-            loss = torch.sum((output - target) ** 2.) + lamb / 2 * (
-                        model.get_weight_norm() ** 2)
+            loss = torch.sum((output - target) ** 2.)
             loss.backward()
 
             loss += loss.item()
@@ -109,9 +108,9 @@ def main():
     num_epoch = 50
 
     #Do we want a lambda for loss?
-    lamb = None
+    discount = None
 
-    train(model, num_epoch, lr, lamb, data)
+    train(model, num_epoch, lr, discount, data)
 
 
 if __name__ == "__main__":
