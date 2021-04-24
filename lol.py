@@ -6,7 +6,7 @@ import numpy as np
 import torch
 
 import matplotlib.pyplot as plt
-import pandas as pd
+#import panda as pd
 
 
 def reward(state, a):
@@ -25,8 +25,8 @@ def sigmoid(x):
 class Winrate_Predictor(nn.Module):
     def __init__(self, input_size, hidden_size=5):
         """ Initialize a class Winrate_Predictor.
-        :param num_question: int
-        :param k: int
+        :param input_size: int
+        :param hidden_size: int
         """
         super(Winrate_Predictor, self).__init__()
 
@@ -81,7 +81,7 @@ def train(model, num_epoch, data, lr, batch_size, discount):
         for sample in loader:
             inputs_mini = sample[0]
             targets_mini = sample[1]
-            
+
             prediction = model(inputs_mini)
 
             loss = CELoss(prediction, targets_mini)
@@ -94,7 +94,7 @@ def train(model, num_epoch, data, lr, batch_size, discount):
 
         normalized_loss = loss_epoch / inputs.size(0)
         losses.append(normalized_loss)
-        print("Epoch: {} \tTraining Cost: {:.6f}\t".format(epoch, normalized_loss))    
+        print("Epoch: {} \tTraining Cost: {:.6f}\t".format(epoch, normalized_loss))
 
         acc = torch.sum(torch.argmax(model(inputs), dim=1).squeeze() == targets) / inputs.size(0)
         print("Epoch: {} \tTraining Accuracy: {:.6f}\t".format(epoch, acc))
@@ -112,7 +112,7 @@ def main():
     data = load_data("./team_comp.csv")
 
     torch.manual_seed(11)
-    model = Winrate_Predictor(input_size=data.size(1) - 1, hidden_size=5)
+    model = Winrate_Predictor(input_size=data.size(1) - 1, hidden_size=100)
 
     # Optimization hyperparameters.
     lr = 0.005
