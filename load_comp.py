@@ -44,7 +44,7 @@ while start_date <= end_date:
             if not (len(team_A_comp) == len(team_B_comp) == 5):
                 continue
             winner = match["WinningTeamId"] 
-            winner_bit = 1 if winner==team_A_id else 0
+            winner_bit = 0 if winner==team_A_id else 1
             row_dict = dict()
             if sqr_norm(team_A_comp) <= sqr_norm(team_B_comp):
                 row_dict["winner"] = winner_bit
