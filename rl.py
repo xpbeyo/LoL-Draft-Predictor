@@ -33,10 +33,28 @@ State space = {
             teamB_pick_5
         )
     }
+State space = {
+        (
+            teamA_pick_1,
+            teamB_pick_1,
+            teamB_pick_2,
+            teamA_pick_2,
+            teamA_pick_3,
+            teamB_pick_3,
+            teamB_pick_4,
+            teamA_pick_4,
+            teamA_pick_5,
+            teamB_pick_5
+        )
+    }
+
 """
-TEAM_A_PICK_INDICES = [6, 9, 10, 17, 18]
-TEAM_B_PICK_INDICES = [7, 8, 11, 16, 19]
-BAN_INDICES = list(range(0, 6)) + list(range(12, 16))
+# TEAM_A_PICK_INDICES = [6, 9, 10, 17, 18]
+# TEAM_B_PICK_INDICES = [7, 8, 11, 16, 19]
+# BAN_INDICES = list(range(0, 6)) + list(range(12, 16))
+TEAM_A_PICK_INDICES = [0, 3, 4, 7, 8]
+TEAM_B_PICK_INDICES = [1, 2, 5, 6, 9]
+
 
 class Policy(nn.Module):
     def __init__(self, state_size, action_size, hidden_size):
@@ -58,21 +76,25 @@ class Policy(nn.Module):
         """
         return self.layers(input)
 
+def get_team_indices(team_bit):
+    if team_bit == 0:
+        return TEAM_A_PICK_INDICES
+    else:
+        return TEAM_B_PICK_INDICES
+
 def train(
-    state_size,
-    hidden_size,
-    action_size,
+    policy_A,
+    policy_B,
     winrate_predictor,
     episodes=10,
     lr=0.01,
 ):
-    policy_A = Policy(state_size, action_size, hidden_size)
-    policy_B = Policy(state_size, action_size, hidden_size)
     policy_A.train()
     policy_B.train()
 
     optimizer = torch.optim.Adam(policy_A.parameters())
     outcomes = []
+    winrates = []
     for i in range(episodes):
         # policy_A is going against policy_B that uses random strategy
         draft, states, actions, penalties, reward = sample_draft(
@@ -89,9 +111,13 @@ def train(
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+        winrate = sum(outcomes) / len(outcomes)
+        winrates.append(winrate)
         
-        
+    torch.save(policy_A, "team_a.pt")
     plt.plot(outcomes)
+    plt.show()
+    plt.plot(winrates)
     plt.show()
 
 def sample_draft(
@@ -106,7 +132,7 @@ def sample_draft(
     """
     state_size = policy_A.state_size
     action_size = policy_A.action_size
-
+    team_indices = get_team_indices(learning_agent)
     policy_A.eval()
     policy_B.eval()
     winrate_predictor.eval()
@@ -119,7 +145,7 @@ def sample_draft(
     round = 0
     while not is_done(starting_state):
         # action_odds have size (action_size,)
-        if round % 2 == 0:
+        if round in team_indices:
             action_odds = policy_A(starting_state)
         else:
             action_odds = policy_B(starting_state)
@@ -131,7 +157,7 @@ def sample_draft(
             [get_penalty(starting_state, action, winrate_predictor)]
         )
 
-        if round % 2 == learning_agent:
+        if round in team_indices:
             penalties.append(penalty)
             states.append(starting_state)
             actions.append(action)
@@ -215,12 +241,18 @@ if __name__ == "__main__":
 
     champs = pd.read_csv("champions.csv")
     winrate_predictor = torch.load("winrate_predictor.pt")
+    state_size = 10
+    hidden_size = 50
     action_size = champs.shape[0]
+
+    torch.manual_seed(11) 
+    policy_A = Policy(state_size, action_size, hidden_size)
+    policy_B = Policy(state_size, action_size, hidden_size)
+
     train(
-        20,
-        50,
-        action_size,
+        policy_A,
+        policy_B,
         winrate_predictor,
-        episodes=1000,
+        episodes=10000,
         lr=0.01
     )
