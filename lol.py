@@ -1,3 +1,4 @@
+from utils import *
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
@@ -104,9 +105,6 @@ def train(model, num_epoch, data, lr, batch_size, discount):
     plt.ylabel('Loss')
     plt.xlabel('Epoch')
     plt.show()
-
-def load_data(path):
-    return torch.from_numpy(np.loadtxt(path, delimiter=",", skiprows=1))
 
 def main():
     data = load_data("./team_comp.csv")
