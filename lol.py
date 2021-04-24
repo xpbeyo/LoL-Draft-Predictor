@@ -110,7 +110,7 @@ def main():
     data = load_data("./team_comp.csv")
 
     torch.manual_seed(11)
-    model = Winrate_Predictor(input_size=data.size(1) - 1, hidden_size=100)
+    model = Winrate_Predictor(input_size=data.size(1) - 1, hidden_size=5)
 
     # Optimization hyperparameters.
     lr = 0.005
@@ -121,7 +121,7 @@ def main():
     discount = None
 
     train(model, num_epoch, data, lr, bs, discount)
-    torch.save(model, "winrate_predictor.pt")
+    # torch.save(model, "winrate_predictor.pt")
 
 if __name__ == "__main__":
     main()
