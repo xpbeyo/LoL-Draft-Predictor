@@ -82,43 +82,74 @@ def get_team_indices(team_bit):
     else:
         return TEAM_B_PICK_INDICES
 
-def train(
-    policy_A,
-    policy_B,
-    winrate_predictor,
-    episodes=10,
-    lr=0.01,
-):
-    policy_A.train()
-    policy_B.train()
+def graph_report(outcomes, winrates):
+    plt.plot(outcomes)
+    plt.title("Outcomes")
+    plt.xlabel("Episode")
+    plt.savefig("./plot/outcomes.png")
+    plt.show()
 
-    optimizer = torch.optim.Adam(policy_A.parameters())
-    outcomes = []
-    winrates = []
+    plt.plot(winrates)
+    plt.title("Win Rates")
+    plt.xlabel("Episode")
+    plt.savefig("./plot/winrates.png")
+    plt.show()
+
+def play(policy_A, policy_B, episodes=100):
+    policy_A.eval()
+    policy_B.eval()
+    n_won = 0
     for i in range(episodes):
-        # policy_A is going against policy_B that uses random strategy
         draft, states, actions, penalties, reward = sample_draft(
             policy_A,
             policy_B,
             0,
             winrate_predictor
         )
-        outcomes.append(reward)
-        action_odds = policy_A(states)
-        sampler = Categorical(action_odds)
-        log_probs = -sampler.log_prob(actions.add(-1))
-        loss = torch.sum(log_probs * reward)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        winrate = sum(outcomes) / len(outcomes)
-        winrates.append(winrate)
-        
+        n_won += reward
+    return n_won / episodes
+
+def train(
+    policy_A,
+    policy_B,
+    winrate_predictor,
+    evolutions=10,
+    episodes=1000,
+    lr=0.01,
+):
+    policy_A.train()
+    policy_B.train()
+
+    optimizer = torch.optim.Adam(policy_A.parameters())
+    learning_agent = 0
+    for evolution in range(evolutions):
+        outcomes = []
+        winrates = []
+        for i in range(episodes):
+            # policy_A is going against policy_B that uses random strategy
+            draft, states, actions, penalties, reward = sample_draft(
+                policy_A,
+                policy_B,
+                learning_agent,
+                winrate_predictor
+            )
+            outcomes.append(reward)
+            action_odds = policy_A(states)
+            sampler = Categorical(action_odds)
+            log_probs = -sampler.log_prob(actions.add(-1))
+            loss = torch.sum(log_probs * reward)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            winrate = sum(outcomes) / len(outcomes)
+            winrates.append(winrate)
+
+        learning_agent = -learning_agent + 1
+        # graph_report(outcomes, winrates)
+        print("Winrate:\t{}".format(winrates[-1]))
+
     torch.save(policy_A, "team_a.pt")
-    plt.plot(outcomes)
-    plt.show()
-    plt.plot(winrates)
-    plt.show()
+
 
 def sample_draft(
     policy_A,
@@ -237,6 +268,22 @@ def transition(state, action):
     state_cpy[pos] = float(action)
     return state_cpy
 
+def test_policy(policy, size):
+    winrates = []
+    for i in range(size):
+        random_policy = Policy(
+            policy.state_size,
+            policy.action_size,
+            policy.hidden_size
+        )
+        winrates.append(play(policy, random_policy))
+    plt.plot(np.arange(size), winrates)
+    plt.title("Win rates against random policies")
+    plt.axhline(y=0.5, color="r")
+    plt.savefig("./plots/test_policy.png")
+    plt.show()
+
+
 if __name__ == "__main__":
 
     champs = pd.read_csv("champions.csv")
@@ -245,14 +292,18 @@ if __name__ == "__main__":
     hidden_size = 50
     action_size = champs.shape[0]
 
-    torch.manual_seed(11) 
+    torch.manual_seed(9) 
     policy_A = Policy(state_size, action_size, hidden_size)
     policy_B = Policy(state_size, action_size, hidden_size)
 
-    train(
-        policy_A,
-        policy_B,
-        winrate_predictor,
-        episodes=10000,
-        lr=0.01
-    )
+    # train(
+    #     policy_A,
+    #     policy_B,
+    #     winrate_predictor,
+    #     evolutions=20,
+    #     episodes=1000,
+    #     lr=0.01
+    # )
+
+    policy = torch.load("team_a.pt")
+    test_policy(policy, 20)
